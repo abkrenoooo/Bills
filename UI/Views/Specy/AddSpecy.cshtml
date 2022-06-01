@@ -1,0 +1,437 @@
+﻿
+@model DAL.ViewModel.Specy_VM
+@{
+    ViewData["Title"] = "AddSpecy";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+
+<div class="content-wrapper">
+    <div class="container-fluid">
+
+        <section id="horizontal-form-layouts">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-wrap bar-success">
+                                <h4 class="card-title" id="horz-layout-basic">Species Data Form</h4>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="px-3">
+                                <form id="form" class="form form-horizontal" asp-action="AddSpecy" asp-controller="Specy">
+
+                                    <input type="number" hidden id="id" class="form-control" asp-for="SpecyId">
+
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="CompanyId">Company Name: </label>
+                                        <div class="col-md-9">
+                                            <select id="CompanyId" onblur="CheckeCompany()" asp-for="CompanyId" class="form-control">
+                                                <option value="-1">Choose Company</option>
+                                                @foreach (var item in ViewBag.Company)
+                                                {
+                                                    <option class="form-control" value="@item.CompanyId">@item.CompanyName</option>
+                                                }
+                                            </select>
+                                            <span id="span1" asp-validation-for="CompanyId" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="SpecyName">Species Name : </label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="SpecyName" onblur="CheckeName()" class="form-control" asp-for="SpecyName">
+                                            <span id="span" asp-validation-for="SpecyName" class="text-danger"></span>
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="Note">Notes: </label>
+                                        <div class="col-md-9">
+                                            <textarea id="Note" rows="5" class="form-control" asp-for="Note"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" id="Cancel" class="btn btn-danger mr-1">
+                                            <i class="icon-trash"></i> Cancel
+                                        </button>
+                                        <button type="button" id="add" class="btn btn-success" onclick="Create()">
+                                            <i class="icon-note"></i> Save
+                                        </button>
+                                        <button type="button" style="display:none" id="edit" class="btn btn-success" onclick="Update()">
+                                            <i class="icon-note"></i> Edit
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <table id="tblStudent" class="table table-striped table-bordered zero-configuration mt-40">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">Company</th>
+                                        <th class="text-center">Name</th>
+                                        <th class="text-center">Note </th>
+                                        <th class="text-center">Eite</th>
+                                        <th class="text-center">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+
+                            </table>
+                            <nav>
+                                <ul class="pagination justify-content-center">
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script src="~/jquery/jquery.min.js"></script>
+<script src="~/jquery-validate/jquery.validate.js"></script>
+<script src="~/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js"></script>
+
+@section Scripts  {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
+<script>
+    $(document).ready(function () {
+        LoadData(1);
+    });
+    function Create() {
+        CheckeCompany();
+        event.preventDefault();
+        if ($("#SpecyName").val() == "" || $("#SpecyName").val() == null || $("#CompanyId").val() == -1) {
+            CheckeName();
+        }
+        else {
+            let SpecyId = $("#id").val();
+            let CompanyName = $("#CompanyId option:selected").text();;
+            let CompanyId = $("#CompanyId").val();
+            let SpecyName = $("#SpecyName").val();
+            let Note = $("#Note").val();
+            var Specy = {
+                CompanyId: CompanyId,
+                SpecyName: SpecyName,
+                Note: Note,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Specy/AddSpecy/",
+                data: Specy,
+                success: function (res) {
+                    if (res.status_code == 0) {
+                        $('#add').show();
+                        $('#edit').hide();
+                        swal("Success!", res.message, "success").then((ok) => {
+                            document.getElementById("form").reset();
+                            $.each(res.data, function (i, item) {
+                                var rows = "<tr id='tr_" + item.specyId + "'>"
+                                    + "<td class='text-center'>" + CompanyName + "</td>"
+                                    + "<td class='text-center'>" + SpecyName + "</td>"
+                                    + "<td class='text-center'>" + Note + "</td>"
+                                    + '<td class="text-center" ><a onclick="Edit(' + item.specyId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                                    + '<td class="text-center" ><a onclick="Delete(' + item.specyId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                                    + "</tr>";
+                                $('#tblStudent tbody').append(rows);
+                            });
+                        });
+                    }
+                    else {
+                        swal("Error!", res.message, "error");
+                    }
+                },
+                error: function (res) {
+                    swal("Error!", " Cheack Your Date!", "error");
+                }
+
+            });
+        }
+
+    };
+
+    function Update() {
+        CheckeCompany();
+        CheckeName();
+        event.preventDefault();
+        if ($("#SpecyName").val() == "" || $("#SpecyName").val() == null || $("#CompanyId").val() == -1) {
+            CheckeName();
+            CheckeCompany();
+
+        }
+        else {
+            let SpecyId = $("#id").val();
+            let CompanyId = $("#CompanyId").val();
+            let CompanyName = $("#CompanyId option:selected").text();
+            let SpecyName = $("#SpecyName").val();
+            let Note = $("#Note").val();
+            var Specy = {
+                CompanyId: CompanyId,
+                SpecyId: SpecyId,
+                SpecyName: SpecyName,
+                Note: Note,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Specy/UpdateSpecy/",
+                data: Specy,
+                success: function (res) {
+                    if (res.status_code == 0) {
+                        $('#span').text(" ");
+                        $('#span1').text(" ");
+                        $('#add').show();
+                        $('#edit').hide();
+                        swal("Success!", res.message, "success").then((ok) => {
+                            document.getElementById("form").reset();
+                            $('#tr_' + SpecyId).remove();
+                            var rows = "<tr id='tr_" + SpecyId + "'>"
+                                + "<td class='text-center'>" + CompanyName + "</td>"
+                                + "<td class='text-center'>" + SpecyName + "</td>"
+                                + "<td class='text-center'>" + Note + "</td>"
+                                + '<td class="text-center" ><a onclick="Edit(' + SpecyId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                                + '<td class="text-center" ><a onclick="Delete(' + SpecyId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                                + "</tr>";
+                            $('#tblStudent tbody').append(rows);
+                        });
+                    }
+                    else {
+                        swal("Error!", res.message, "error");
+                    }
+                },
+                error: function (res) {
+                    swal("Error!", " Cheack Your Date!", "error");
+                }
+            });
+        }
+
+    };
+
+    function LoadData(pageNumber) {
+        $("#tblStudent tbody tr").remove();
+        $.ajax({
+            type: 'POST',
+            url: '/Specy/LoadData?PageNumber=' + pageNumber + '&PageSize=' + 10,
+            dataType: 'json',
+            data: { id: '' },
+            success: function (res) {
+                $('#span').text(" ");
+                $('#span1').text(" ");
+                $('.pagination').empty();
+                $('#tblStudent tbody').empty();
+                $.each(res.data, function (i, item) {
+                    var rows = "<tr id='tr_" + item.specyId + "'>"
+                        + "<td class='text-center'>" + item.companyName + "</td>"
+                        + "<td class='text-center'>" + item.specyName + "</td>"
+                        + "<td class='text-center'>" + item.note + "</td>"
+                        + '<td class="text-center" ><a onclick="Edit(' + item.specyId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                        + '<td class="text-center" ><a onclick="Delete(' + item.specyId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                        + "</tr>";
+                    $('#tblStudent tbody').append(rows);
+                });
+                PaggingTemplate(res.totalPages, res.currentPage);
+            },
+            error: function (ex) {
+                swal("Error!", "Can't load Date!", "error");
+            }
+        });
+        return false;
+    }
+
+    function Delete(id) {
+        $('#span').text(" ");
+        $('#span1').text(" ");
+        swal({
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this imaginary file!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/Specy/DeleteSpecy/' + id,
+                        success: function (res) {
+                            if (res.status_code == 0) {
+                                $("#edit").hide();
+                                $("#add").show();
+                                document.getElementById("form").reset();
+                                $('#span').text(" ");
+                                $('#span1').text(" ");
+                                swal(res.message, {
+                                    icon: "success",
+                                });
+                                $('#tr_' + id).remove();
+
+                            }
+                            else {
+                                swal("Error!", res.message, "error");
+                            }
+                        },
+                    });
+                } else {
+                    swal("Your imaginary file is safe!", {
+                        icon: "error",
+                    });
+                }
+            });
+    };
+
+    function Edit(id) {
+        $('#span').text(" ");
+        $('#span1').text(" ");
+        document.getElementById("form").reset();
+        $.ajax({
+            type: "POST",
+            url: "/Specy/EditSpecy/" + id,
+            success: function (res) {
+                if (res.status_code == 0) {
+                    $('#add').hide();
+                    $('#edit').show();
+                    $.each(res.data, function (i, item) {
+                        $('#id').val(item.specyId);
+                        $('#CompanyId').val(item.companyId);
+                        $('#SpecyName').val(item.specyName);
+                        $('#Note').val(item.note);
+                    });
+                }
+                else {
+                    $('#add').show();
+                    $('#edit').hide();
+                    swal("Error!", res.message, "error");
+                }
+
+            },
+            error: function (res) {
+                swal("Error!", " Cheack Your Date!", "error");
+            }
+        });
+    };
+
+    function CheckeName() {
+        $('#span').text(" ");
+        let SpecyId = $("#id").val();
+        let CompanyName = $("#CompanyId option:selected").text();;
+        let CompanyId = $("#CompanyId").val();
+        let SpecyName = $("#SpecyName").val();
+        let Note = $("#Note").val();
+        var Specy = {
+            CompanyId: CompanyId,
+            CompanyName: CompanyName,
+            SpecyId: SpecyId,
+            SpecyName: SpecyName,
+            Note: Note,
+        };
+        $.ajax({
+            type: "POST",
+            url: "/Assist/CheckeSpecyName/",
+            data: Specy,
+            success: function (res) {
+                if (res.status_code == 0) {
+                    $('#span').text(" ");
+                }
+                else {
+                    $('#span').text(res.message);
+                }
+            },
+            error: function (res) {
+                swal("Error!", " Cheack Your Date!", "error");
+            }
+        });
+    };
+
+    function CheckeCompany() {
+        $('#span1').text(" ");
+        if ($("#CompanyId").val() == "-1" || $("#CompanyId").val() < 1) {
+            $('#span1').text("COMPANY NAME is Required");
+        }
+    };
+
+    function PaggingTemplate(totalPage, currentPage) {
+
+        var template = "";
+        var TotalPages = totalPage;
+        var CurrentPage = currentPage;
+        var PageNumberArray = Array();
+
+
+        var countIncr = 1;
+        if (currentPage != 1) {
+
+            for (var i = currentPage - 1; i <= totalPage; i++) {
+
+                PageNumberArray[0] = currentPage - 1;
+                if (PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = i + 1;
+                }
+                countIncr++;
+            };
+        }
+        else {
+            for (var i = currentPage; i <= totalPage; i++) {
+
+                PageNumberArray[0] = currentPage;
+                if (totalPage != currentPage && PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = i + 1;
+                }
+                countIncr++;
+            };
+        }
+        PageNumberArray = PageNumberArray.slice(0, 5);
+        var FirstPage = 1;
+        var LastPage = totalPage;
+        if (totalPage != currentPage) {
+            var ForwardOne = currentPage + 1;
+        }
+        var BackwardOne = 1;
+        if (currentPage > 1) {
+            BackwardOne = currentPage - 1;
+        }
+
+        template = template + '<li class="page-item page-indicator">' +
+            '<a onclick="LoadData(' + BackwardOne + ')" class="page-link" href = "javascript:void()" >' +
+            '<i class="la la-angle-left"></i></a ></li >';
+
+
+
+        var numberingLoop = "";
+        for (var i = 0; i < PageNumberArray.length; i++) {
+            if (PageNumberArray[i] == currentPage) {
+
+                numberingLoop = numberingLoop + ' <li class="page-item active"><a onclick="LoadData(' + PageNumberArray[i] + ')" class="page-link" href="javascript:void()">' + PageNumberArray[i] + '</a></li>'
+
+            }
+            else {
+                numberingLoop = numberingLoop + ' <li class="page-item "><a onclick="LoadData(' + PageNumberArray[i] + ')" class="page-link" href="javascript:void()">' + PageNumberArray[i] + '</a></li>'
+            }
+
+        }
+        template = template + numberingLoop + '<li class="page-item page-indicator">' +
+            '<a onclick="LoadData(' + ForwardOne + ')" class="page-link" href = "javascript:void()" >' +
+            '<i class="la la-angle-right"></i></a ></li >';
+
+        $(".pagination").append(template);
+
+
+    }
+
+    $("#Cancel").click(function () {
+        $("#edit").hide();
+        $("#add").show();
+        document.getElementById("form").reset();
+        $('#span').text(" ");
+        $('#span1').text(" ");
+    })
+</script>
