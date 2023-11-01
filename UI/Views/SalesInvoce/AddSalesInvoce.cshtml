@@ -1,0 +1,728 @@
+﻿@model DAL.ViewModel.SalesInvoce_VM
+@{
+    ViewData["Title"] = "AddSalesInvoce";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <div class="container-fluid">
+        <section id="horizontal-form-layouts">
+            <div class="row">
+
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-wrap bar-success">
+                                <h4 class="card-title" id="horz-layout-basic">Sales Invoice</h4>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="px-3">
+                                <form id="form" class="form form-horizontal">
+                                    <div class="form-body">
+                                        <h4 class="form-section">
+                                            <i class="icon-user"></i>Bills Details
+                                        </h4>
+                                        <input type="number" hidden id="id" class="form-control" asp-for="SalesInvoceId">
+
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="Date">Bills Date : </label>
+                                            <div class="col-md-9">
+                                                <div class="position-relative has-icon-left">
+                                                    <input type="date" id="Date" onblur="CheckeDate()" class="form-control" asp-for="Date">
+                                                    <span id="SpanDate" asp-validation-for="Date" class="text-danger"></span>
+                                                    <div class="form-control-position ml-2">
+                                                        <i class="ft-message-square"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="Number">Bills NUmber: </label>
+                                            <div class="col-md-9">
+                                                <input type="number" value="@ViewBag.Number" id="Number" class="form-control" disabled>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="ClientId">Client Name: </label>
+                                            <div class="col-md-9">
+                                                <select id="ClientId" onblur="CheckeClient()" asp-for="ClientId" class="form-control">
+                                                    <option value="-1">Choose Client</option>
+                                                    @foreach (var item in ViewBag.Clients)
+                                                    {
+                                                        <option class="form-control" value="@item.ClientId">@item.ClientName</option>
+                                                    }
+                                                </select>
+                                                <span id="SpanClientId" asp-validation-for="ClientId" class="text-danger"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="CategoryId">Item Name: </label>
+                                            <div class="col-md-9">
+                                                <select id="CategoryId" onblur="CheckeSpecy(); GetSellingPrice();" asp-for="CategoryId" class="form-control">
+                                                    <option value="-1">Choose Item</option>
+                                                    @foreach (var item in ViewBag.Specy)
+                                                    {
+                                                        <option class="form-control" value="@item.CategoryId">@item.ItemName</option>
+                                                    }
+                                                </select>
+                                                <span id="SpanCategoryId" asp-validation-for="CategoryId" class="text-danger"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="SellingPrice">selling price:</label>
+                                            <div class="col-md-9">
+                                                <input type="number" step="0.01" onblur="CheckeSellingPrice() " id="SellingPrice" class="form-control" asp-for="SellingPrice" min="0">
+                                                <span id="SpanSellingPrice" asp-validation-for="SellingPrice" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="Quantity">Quintity: </label>
+                                            <div class="col-md-9">
+                                                <input type="number" onblur="CheckeQuantity()" id="Quantity" class="form-control" asp-for="Quantity" min="0">
+                                                <span id="SpanQuantity" asp-validation-for="Quantity" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="Total">Total: </label>
+                                            <div class="col-md-9">
+                                                <input type="number" onblur="CheckeQuantity()" step="0.01" id="Total" class="form-control" disabled value="0">
+                                            </div>
+                                        </div>
+
+                                        <h4 class="form-section">
+                                            <i class="icon-book-open"></i>Other Details
+                                        </h4>
+
+
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="BillsTotal"> Bills Total  </label>
+                                            <div class="col-md-9">
+                                                <input type="number" onblur="CheckeQuantity()" step="0.01" id="BillsTotal" class="form-control" disabled value="0">
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="PercentageDiscount">percentage discount</label>
+                                            <div class="col-md-9">
+                                                <input type="number" step="0.01" onblur="CheckePercentageDiscount()" id="PercentageDiscount" class="form-control" asp-for="PercentageDiscount" value="0" min="0">
+                                                <span id="SpanPercentageDiscount" asp-validation-for="PercentageDiscount" class="text-danger"></span>
+
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="ValueDiscount">value discount</label>
+                                            <div class="col-md-9">
+                                                <input type="number" step="0.01" onblur="CheckeValueDiscount()" id="ValueDiscount" class="form-control" asp-for="ValueDiscount" value="0"min="0">
+                                                <span id="SpanValueDiscount" asp-validation-for="ValueDiscount" class="text-danger"></span>
+
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="Net"> The Net </label>
+                                            <div class="col-md-9">
+                                                <input type="number" step="0.01" id="Net" class="form-control" disabled value="0">
+                                                <span id="SpanNet" class="text-danger"></span>
+
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="paidup">paid up</label>
+                                            <div class="col-md-9">
+                                                <input type="number" step="0.01" onblur="CheckePaidUp()" id="paidup" class="form-control" value="0" min="0">
+                                                <span id="Spanpaidup" class="text-danger"></span>
+
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" for="rest">The rest</label>
+                                            <div class="col-md-9">
+                                                <input type="number" step="0.01" id="Rest" class="form-control" value="0" disabled>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <button type="button" id="Cancel" class="btn btn-danger mr-1">
+                                            <i class="icon-trash"></i> Cancel
+                                        </button>
+                                        <button type="button" id="add" class="btn btn-success" onclick="Create()">
+                                            <i class="icon-note"></i> Save
+                                        </button>
+                                        <button type="button" style="display:none" id="edit" class="btn btn-success" onclick="Update()">
+                                            <i class="icon-note"></i> Edit
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <table id="tblStudent" class="table table-striped table-bordered zero-configuration">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center w-25">Date</th>
+                                        <th class="text-center">Number</th>
+                                        <th class="text-center">Client </th>
+                                        <th class="text-center">Item</th>
+                                        <th class="text-center">Selling Price</th>
+                                        <th class="text-center">Quintity</th>
+                                        <th class="text-center">Percentage Discount </th>
+                                        <th class="text-center">Value Discount</th>
+                                        <th class="text-center">The Net</th>
+                                        <th class="text-center">Edit</th>
+                                        <th class="text-center">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+
+                            </table>
+                            <nav>
+                                <ul class="pagination justify-content-center">
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </section>
+
+    </div>
+</div>
+<script src="~/jquery/jquery.min.js"></script>
+<script src="~/jquery-validate/jquery.validate.js"></script>
+<script src="~/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js"></script>
+
+@section Scripts  {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+<script>
+    //let Net =
+    $(document).ready(function () {
+        LoadData(1);
+    });
+
+    function Create() {
+        CheckeClient();
+        CheckeSpecy();
+        CheckeQuantity();
+        CheckeSellingPrice();
+        CheckePercentageDiscount();
+        CheckeDate();
+        CheckePaidUp();
+        CheckeValueDiscount();
+        if ($("#Date").val() == "" || $("#Date").val() == null || $("#Quantity").val() <= 0 || $("#CategoryId").val() == -1 || $("#ClientId").val() == -1 || $("#SellingPrice").val() <= 0 || parseFloat($("#Net").val())<0) {
+
+        }
+        else {
+            let SalesInvoceId = $("#id").val();
+            let Net = $("#Net").val();
+            let Date = $("#Date").val();
+            let ClientName = $("#ClientId option:selected").text();
+            let ClientId = $("#ClientId").val();
+            let SpecyName = $("#CategoryId option:selected").text();
+            let CategoryId = $("#CategoryId").val();
+            let SellingPrice = $("#SellingPrice").val();;
+            let Quantity = $("#Quantity").val();
+            let PercentageDiscount = $("#PercentageDiscount").val();
+            let ValueDiscount = $("#ValueDiscount").val();
+            var SalesInvoce = {
+                Date: Date,
+                CategoryId: CategoryId,
+                ClientId: ClientId,
+                SellingPrice: SellingPrice,
+                Quantity: Quantity,
+                PercentageDiscount: PercentageDiscount,
+                ValueDiscount: ValueDiscount,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/SalesInvoce/AddSalesInvoce",
+                data: SalesInvoce,
+                success: function (res) {
+                    if (res.status_code > 0) {
+                        $('#add').show();
+                        $('#edit').hide();
+                        swal("Success!", res.message, "success").then((ok) => {
+                            document.getElementById("form").reset();
+                            $('#tr_' + SalesInvoceId).remove();
+                            $("#Number").val(res.status_code);
+                            $.each(res.data, function (i, item) {
+                                var rows = "<tr id='tr_" + item.salesInvoceId + "'>"
+                                    + "<td class='text-center'>" + Date.substring(0, 10)  + "</td>"
+                                    + "<td class='text-center'>" + item.salesInvoceId + "</td>"
+                                    + "<td class='text-center'>" + ClientName + "</td>"
+                                    + "<td class='text-center'>" + SpecyName + "</td>"
+                                    + "<td class='text-center'>" + SellingPrice + "</td>"
+                                    + "<td class='text-center'>" + Quantity + "</td>"
+                                    + "<td class='text-center'>" + PercentageDiscount + "</td>"
+                                    + "<td class='text-center'>" + ValueDiscount + "</td>"
+                                    + "<td class='text-center'>" + Net + "</td>"
+                                    + '<td class="text-center" ><a onclick="Edit(' + item.salesInvoceId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                                    + '<td class="text-center" ><a onclick="Delete(' + item.salesInvoceId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                                    + "</tr>";
+                                $('#tblStudent tbody').append(rows);
+                            });
+                        });
+                    }
+                    else {
+                        swal("Error!", res.message, "error");
+                    }
+                },
+                error: function (res) {
+                    swal("Error!", " Cheack Your Date!", "error");
+                }
+
+            });
+        }
+
+    }
+
+    function Update() {
+        CheckeClient();
+        CheckeSpecy();
+        CheckeQuantity();
+        CheckeSellingPrice();
+        CheckePercentageDiscount();
+        CheckeDate();
+        CheckePaidUp();
+        CheckeValueDiscount();
+        if ($("#Date").val() == "" || $("#Date").val() == null || $("#Quantity").val() <= 0 || $("#CategoryId").val() == -1 || $("#ClientId").val() == -1 || $("#SellingPrice").val() <= 0 || parseFloat($("#Net").val()) < 0) {
+
+        }
+        else {
+            let SalesInvoceId = $("#id").val();
+            let Net = $("#Net").val();
+            let Date = $("#Date").val();
+            let ClientName = $("#ClientId option:selected").text();
+            let ClientId = $("#ClientId").val();
+            let SpecyName = $("#CategoryId option:selected").text();
+            let CategoryId = $("#CategoryId").val();
+            let SellingPrice = $("#SellingPrice").val();
+            let Quantity = $("#Quantity").val();
+            let PercentageDiscount = $("#PercentageDiscount").val();
+            let ValueDiscount = $("#ValueDiscount").val();
+            var SalesInvoce = {
+                SalesInvoceId:SalesInvoceId,
+                Date: Date,
+                CategoryId: CategoryId,
+                ClientId: ClientId,
+                SellingPrice: SellingPrice,
+                Quantity: Quantity,
+                PercentageDiscount: PercentageDiscount,
+                ValueDiscount: ValueDiscount,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/SalesInvoce/UpdateSalesInvoce",
+                data: SalesInvoce,
+                success: function (res) {
+                    if (res.status_code > 0) {
+                        $('#add').show();
+                        $('#edit').hide();
+                        swal("Success!", res.message, "success").then((ok) => {
+                            document.getElementById("form").reset();
+                            $('#tr_' + SalesInvoceId).remove();
+                            $("#Number").val(res.status_code);
+                            $.each(res.data, function (i, item) {
+                                var rows = "<tr id='tr_" + item.salesInvoceId + "'>"
+                                    + "<td class='text-center'>" + Date.substring(0, 10) + "</td>"
+                                    + "<td class='text-center'>" + item.salesInvoceId + "</td>"
+                                    + "<td class='text-center'>" + ClientName + "</td>"
+                                    + "<td class='text-center'>" + SpecyName + "</td>"
+                                    + "<td class='text-center'>" + SellingPrice + "</td>"
+                                    + "<td class='text-center'>" + Quantity + "</td>"
+                                    + "<td class='text-center'>" + PercentageDiscount + "</td>"
+                                    + "<td class='text-center'>" + ValueDiscount + "</td>"
+                                    + "<td class='text-center'>" + Net + "</td>"
+                                    + '<td class="text-center" ><a onclick="Edit(' + item.salesInvoceId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                                    + '<td class="text-center" ><a onclick="Delete(' + item.salesInvoceId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                                    + "</tr>";
+                                $('#tblStudent tbody').append(rows);
+                            });
+                        });
+                    }
+                    else {
+                        swal("Error!", res.message, "error");
+                    }
+                },
+                error: function (res) {
+                    swal("Error!", " Cheack Your Date!", "error");
+                }
+            });
+        }
+
+    };
+
+    function LoadData(pageNumber) {
+        $("#tblStudent tbody tr").remove();
+        $.ajax({
+            type: 'POST',
+            url: '/SalesInvoce/LoadData?PageNumber=' + pageNumber + '&PageSize=' + 10,
+            dataType: 'json',
+            data: { id: '' },
+            success: function (res) {
+                $('.pagination').empty();
+                $('#tblStudent tbody').empty();
+                $.each(res.data, function (i, item) {
+                    $("#Number").val(@ViewBag.SalesInvoce);
+                    var rows = "<tr id='tr_" + item.salesInvoceId + "'>"
+                        + "<td class='text-center'>" + item.date.substring(0, 10)  + "</td>"
+                        + "<td class='text-center'>" + item.salesInvoceId + "</td>"
+                        + "<td class='text-center'>" + item.clientName + "</td>"
+                        + "<td class='text-center'>" + item.categoryName + "</td>"
+                        + "<td class='text-center'>" + item.sellingPrice + "</td>"
+                        + "<td class='text-center'>" + item.quantity + "</td>"
+                        + "<td class='text-center'>" + item.percentageDiscount + "</td>"
+                        + "<td class='text-center'>" + item.valueDiscount + "</td>"
+                        + "<td class='text-center'>" + item.net + "</td>"
+                        + '<td class="text-center" ><a onclick="Edit(' + item.salesInvoceId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                        + '<td class="text-center" ><a onclick="Delete(' + item.salesInvoceId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                        + "</tr>";
+                    $('#tblStudent tbody').append(rows);
+                });
+                PaggingTemplate(res.totalPages, res.currentPage);
+            },
+            error: function (ex) {
+                swal("Error!", "Can't load Date!", "error");
+            }
+        });
+        return false;
+    }
+
+    function Delete(id) {
+        $('#Spanpaidup').text(" ");
+        $('#SpanDate').text(" ");
+        $('#SpanCategoryId').text(" ");
+        $('#SpanClientId').text(" ");
+        $('#SpanQuantity').text(" ");
+        $('#SpanSellingPrice').text(" ");
+        swal({
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this imaginary file!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/SalesInvoce/DeleteSalesInvoce/' + id,
+                        success: function (res) {
+                            if (res.status_code > 0) {
+                                $("#Number").val(res.status_code);
+                                $("#edit").hide();
+                                $("#add").show();
+                                document.getElementById("form").reset();
+                                $('#Spanpaidup').text(" ");
+                                $('#SpanDate').text(" ");
+                                $('#SpanCategoryId').text(" ");
+                                $('#SpanClientId').text(" ");
+                                $('#SpanQuantity').text(" ");
+                                $('#SpanSellingPrice').text(" ");
+                                $('#tr_' + id).remove();
+                                swal(res.message, {
+                                    icon: "success",
+                                });
+
+                            }
+                            else {
+                                swal("Error!", res.message, "error");
+                            }
+                        },
+                    });
+                }
+                else {
+                    swal("Your imaginary file is safe!", {
+                        icon: "error",
+                    });
+                }
+            });
+    };
+
+    function Edit(id) {
+
+        $('#Spanpaidup').text(" ");
+        $('#SpanDate').text(" ");
+        $('#SpanCategoryId').text(" ");
+        $('#SpanClientId').text(" ");
+        $('#SpanQuantity').text(" ");
+        $('#SpanSellingPrice').text(" ");
+        document.getElementById("form").reset();
+        $.ajax({
+            type: "POST",
+            url: "/SalesInvoce/EditSalesInvoce/" + id,
+            success: function (res) {
+                    $('#add').hide();
+                    $('#edit').show();
+                    $.each(res.data, function (i, item) {
+                        $("#Number").val(item.salesInvoceId);
+                        $('#id').val(item.salesInvoceId);
+                        $('#ClientId').val(item.clientId);
+                        $('#CategoryId').val(item.categoryId);
+                        $('#SellingPrice').val(item.sellingPrice);
+                        $('#Quantity').val(item.quantity);
+                        $('#PercentageDiscount').val(item.percentageDiscount);
+                        $('#ValueDiscount').val(item.valueDiscount);
+                        $('#Net').val(item.net);
+                        $('#Date').val(item.date.substring(0, 10));
+                        $("#BillsTotal").val(item.total);
+                        $("#Total").val(item.total);
+                    });
+                CheckeQuantity();
+                CheckeSellingPrice();
+                CheckePercentageDiscount();
+                CheckeDate();
+                CheckePaidUp();
+                CheckeValueDiscount();
+            },
+            error: function (res) {
+                swal("Error!", " Cheack Your Date!", "error");
+            }
+        });
+    };
+
+    function GetSellingPrice() {
+        let SpecyName = $("#CategoryId option:selected").text();
+        if ($("#CategoryId").val() >-1 ) {
+            $.ajax({
+                type: "POST",
+                url: "/Assist/GetSellingPrice?categoryName=" + SpecyName,
+                success: function (res) {
+                    $("#SellingPrice").val(res);
+                },
+                error: function (res) {
+                    swal("Error!", " Unknow Error", "error");
+                }
+            });
+        }
+    };
+
+    function CheckeClient() {
+        $('#SpanClientId').text(" ");
+        if ($("#ClientId").val() == "-1") {
+            $('#SpanClientId').text("CLIENT  NAME is Required");
+        }
+    };
+
+    function CheckeSpecy() {
+        $('#SpanCategoryId').text(" ");
+        if ($("#CategoryId").val() == "-1") {
+            $('#SpanCategoryId').text("ITEM NAME is Required");
+        }
+    };
+
+    function CheckeQuantity() {
+        $('#SpanQuantity').text(" ");
+        if ($("#Quantity").val() == "") {
+            $('#SpanQuantity').text("Quantity is Required");
+        }
+        else {
+            if ($("#Quantity").val() <= 0) {
+                $('#SpanQuantity').text("Quantity Must be Greater than Zero");
+            }
+            else {
+                if ($("#SellingPrice").val() > 0) {
+                    let Quantity = $("#Quantity").val();
+                    let SellingPrice = $("#SellingPrice").val();
+                    $("#BillsTotal").val(Quantity * SellingPrice);
+                    $("#Total").val(Quantity * SellingPrice);
+                    CheckePercentageDiscount();
+                    CheckeValueDiscount();
+                    CheckePaidUp()
+
+                }
+            }
+        }
+    };
+
+    function CheckeSellingPrice() {
+        if ($("#SellingPrice").val() == "") {
+            $('#SpanSellingPrice').text("Selling Price is Required”");
+        }
+        else {
+            if ($("#SellingPrice").val() <= 0) {
+                $('#SpanSellingPrice').text("Selling Price Must be Greater than Zero");
+            }
+            else {
+                if ($("#SellingPrice").val() > 0) {
+                    let Quantity = $("#Quantity").val();
+                    let SellingPrice = $("#SellingPrice").val();
+                    $("#BillsTotal").val(Quantity * SellingPrice);
+                    $("#Total").val(Quantity * SellingPrice);
+                    CheckePercentageDiscount();
+                    CheckeValueDiscount();
+                    CheckePaidUp();
+
+                }
+            }
+        }
+    };
+
+    function CheckePercentageDiscount() {
+        $('#SpanPercentageDiscount').text("");
+        if ($("#PercentageDiscount").val() == "") {
+            $('#SpanPercentageDiscount').text("Percentage  discount Must be Greater thanor equal Zero");
+        }
+        else if ($("#PercentageDiscount").val() > 0 && $("#ValueDiscount").val() == 0) {
+            let Total = $("#Total").val();
+            let PercentageDiscount = $("#PercentageDiscount").val();
+            $("#Net").val(Total - (Total * (PercentageDiscount / 100)));
+        }
+        else if ($("#PercentageDiscount").val() >= 0 && $("#ValueDiscount").val() >= 0) {
+            {
+                let Total = $("#Total").val();
+                let PercentageDiscount = $("#PercentageDiscount").val();
+                let ValueDiscount = $("#ValueDiscount").val();
+                $("#Net").val(Total - (Total * (PercentageDiscount / 100)) - ValueDiscount);
+                CheckePaidUp();
+
+            }
+        }
+    };
+
+    function CheckeValueDiscount() {
+        $('#SpanValueDiscount').text("");
+        if ($("#ValueDiscount").val() == "") {
+            $('#SpanValueDiscount').text("Value discount Must be Greater thanor equal Zero");
+        }
+        else if ($("#ValueDiscount").val() > 0 && $("#PercentageDiscount").val() == 0) {
+            let Total = $("#Total").val();
+            let ValueDiscount = $("#ValueDiscount").val();
+            $("#Net").val(Total - ValueDiscount);
+        }
+        else if ($("#PercentageDiscount").val() >= 0 && $("#ValueDiscount").val() >= 0) {
+            let Total = $("#Total").val();
+            let PercentageDiscount = $("#PercentageDiscount").val();
+            let ValueDiscount = $("#ValueDiscount").val();
+            $("#Net").val(Total - (Total * (PercentageDiscount / 100)) - ValueDiscount);
+            CheckePaidUp();
+
+        }
+    };
+
+    function CheckeDate() {
+        $('#SpanDate').text("");
+        if ($("#Date").val() == "" || $("#Date").val() == null) {
+            $('#SpanDate').text("BILL DATE is Required");
+        }
+    };
+
+    function CheckePaidUp() {
+        $('#Spanpaidup').text("");
+        if ($("#paidup").val() == "") {
+            $('#Spanpaidup').text("Paid Up is Required");
+        }
+        else if (parseFloat($("#Net").val())<0) {
+            $('#SpanNet').text("The Net Must be Greater than Zero ");
+        }
+        else if ($('#Net').val() > "" && $('#paidup').val() != "") {
+
+            let Net = parseFloat($("#Net").val());
+            let paidup = parseFloat($("#paidup").val());
+            if (paidup> 0) {
+                $("#Rest").val(paidup - Net);
+            }
+
+            //if (Net > paidup) {
+            //    $('#Spanpaidup').text("Paid Up Must be Greater thanor equal The Net");
+            //}
+            //else {
+            //    $('#Spanpaidup').text("");
+            //    $("#Rest").val(paidup - Net);
+            //}
+
+        }
+    };
+
+    function PaggingTemplate(totalPage, currentPage) {
+
+        var template = "";
+        var TotalPages = totalPage;
+        var CurrentPage = currentPage;
+        var PageNumberArray = Array();
+
+
+        var countIncr = 1;
+        if (currentPage != 1) {
+
+            for (var i = currentPage - 1; i <= totalPage; i++) {
+
+                PageNumberArray[0] = currentPage - 1;
+                if (PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = i + 1;
+                }
+                countIncr++;
+            };
+        }
+        else {
+            for (var i = currentPage; i <= totalPage; i++) {
+
+                PageNumberArray[0] = currentPage;
+                if (totalPage != currentPage && PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = i + 1;
+                }
+                countIncr++;
+            };
+        }
+        PageNumberArray = PageNumberArray.slice(0, 5);
+        var FirstPage = 1;
+        var LastPage = totalPage;
+        if (totalPage != currentPage) {
+            var ForwardOne = currentPage + 1;
+        }
+        var BackwardOne = 1;
+        if (currentPage > 1) {
+            BackwardOne = currentPage - 1;
+        }
+
+        template = template + '<li class="page-item page-indicator">' +
+            '<a onclick="LoadData(' + BackwardOne + ')" class="page-link" href = "javascript:void()" >' +
+            '<i class="la la-angle-left"></i></a ></li >';
+
+
+
+        var numberingLoop = "";
+        for (var i = 0; i < PageNumberArray.length; i++) {
+            if (PageNumberArray[i] == currentPage) {
+
+                numberingLoop = numberingLoop + ' <li class="page-item active"><a onclick="LoadData(' + PageNumberArray[i] + ')" class="page-link" href="javascript:void()">' + PageNumberArray[i] + '</a></li>'
+
+            }
+            else {
+                numberingLoop = numberingLoop + ' <li class="page-item "><a onclick="LoadData(' + PageNumberArray[i] + ')" class="page-link" href="javascript:void()">' + PageNumberArray[i] + '</a></li>'
+            }
+
+        }
+        template = template + numberingLoop + '<li class="page-item page-indicator">' +
+            '<a onclick="LoadData(' + ForwardOne + ')" class="page-link" href = "javascript:void()" >' +
+            '<i class="la la-angle-right"></i></a ></li >';
+
+        $(".pagination").append(template);
+
+
+    }
+
+    $("#Cancel").click(function () {
+        $("#edit").hide();
+        $("#add").show();
+        document.getElementById("form").reset();
+        $('#SpanValueDiscount').text(" ");
+        $('#SpanPercentageDiscount').text(" ");
+        $('#SpanQuantity').text(" ");
+        $('#SpanClientId').text(" ");
+        $('#SpanCategoryId').text(" ");
+        $('#SpanSellingPrice').text(" ");
+    })
+</script>
+

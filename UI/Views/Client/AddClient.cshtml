@@ -1,0 +1,470 @@
+﻿@model DAL.ViewModel.Client_VM
+@{
+    ViewData["Title"] = "AddClient";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <div class="container-fluid">
+
+        <section id="horizontal-form-layouts">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-wrap bar-success">
+                                <h4 class="card-title" id="horz-layout-basic">Clients</h4>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="px-3">
+                                <form id="form" class="form form-horizontal" asp-action="AddClient" asp-controller="Client">
+
+                                    <input type="number" hidden id="id" class="form-control" asp-for="ClientId">
+
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="ClientName">Client Name : </label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="ClientName" onblur="CheckeName()" class="form-control" asp-for="ClientName">
+                                            <span id="span" asp-validation-for="ClientName" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="Phone">Phone  : </label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="Phone" onblur="CheckePhone() " class="form-control" asp-for="Phone" pattern="[0-9]{14}">
+                                            <span id="span1" asp-validation-for="Phone" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="Number">Number : </label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="Number" class="form-control" value="@ViewBag.Number" disabled>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="Address">Address: </label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="Address" onblur="CheckeAddress() " class="form-control" asp-for="Address">
+                                            <span id="span2" asp-validation-for="Address" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="form-actions">
+                                        <button type="button" id="Cancel" class="btn btn-danger mr-1" onclick="Load()">
+                                            <i class="icon-trash"></i> Cancel
+                                        </button>
+                                        <button type="button" id="add" class="btn btn-success" onclick="Create()">
+                                            <i class="icon-note"></i> Save
+                                        </button>
+                                        <button type="button" style="display:none" id="edit" class="btn btn-success" onclick="Update()">
+                                            <i class="icon-note"></i> Edit
+                                        </button>
+                                    </div>
+
+
+                                </form>
+                            </div>
+                            <table id="tblStudent" class="table table-striped table-bordered zero-configuration mt-40">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">Name</th>
+                                        <th class="text-center">Phone </th>
+                                        <th class="text-center">Number </th>
+                                        <th class="text-center">Address </th>
+                                        <th class="text-center">Eite</th>
+                                        <th class="text-center">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+
+                            </table>
+
+                            <nav>
+                                <ul class="pagination justify-content-center">
+                                </ul>
+                            </nav>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script src="~/jquery/jquery.min.js"></script>
+<script src="~/jquery-validate/jquery.validate.js"></script>
+<script src="~/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js"></script>
+
+@section Scripts  {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
+<script>
+    $(document).ready(function () {
+        LoadData(1);
+    });
+    function Create() {
+        CheckeName();
+        CheckePhone();
+        CheckeAddress();
+        event.preventDefault();
+        if ($("#ClientName").val() == "" || $("#ClientName").val() == null || $("#Phone").val() == "" || $("#Phone").val() == null || $("#Address").val() == "" || $("#Address").val() == null || $("#Phone").val().length > 14) {
+
+        }
+        else {
+            let CId = $("#Number").val();
+            let ClientId = $("#id").val();
+            let ClientName = $("#ClientName").val();
+            let Phone = $("#Phone").val();
+            let Address = $("#Address").val();
+            var Client = {
+                ClientName: ClientName,
+                Phone: Phone,
+                Address: Address,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Client/AddClient/",
+                data: Client,
+                success: function (res) {
+                    if (res.status_code > 0) {
+                        $('#span').text(" ");
+                        $('#span1').text(" ");
+                        $('#span2').text(" ");
+                        swal("Success!", res.message, "success").then((ok) => {
+                            document.getElementById("form").reset();
+                            $("#Number").val(res.status_code);
+                            $.each(res.data, function (i, item) {
+                                var rows = "<tr id='tr_" + item.clientId + "'>"
+                                    + "<td class='text-center'>" + ClientName + "</td>"
+                                    + "<td class='text-center'>" + Phone + "</td>"
+                                    + "<td class='text-center'>" + item.clientId + "</td>"
+                                    + "<td class='text-center'>" + Address + "</td>"
+                                    + '<td class="text-center" ><a onclick="Edit(' + item.clientId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                                    + '<td class="text-center" ><a onclick="Delete(' + item.clientId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                                    + "</tr>";
+                                $('#tblStudent tbody').append(rows);
+                            });
+                            $("#Number").val(res.status_code);
+                        });
+                    }
+                    else {
+                        swal("Error!", res.message, "error");
+                    }
+                },
+                error: function (res) {
+                    swal("Error!", " Cheack Your Date!", "error");
+                }
+
+            });
+        }
+
+    };
+
+    function Update() {
+        CheckeName();
+        CheckePhone();
+        CheckeAddress();
+        event.preventDefault();
+        if ($("#ClientName").val() == "" || $("#ClientName").val() == null || $("#Phone").val() == "" || $("#Phone").val() == null || $("#Address").val() == "" || $("#Address").val() == null || $("#Phone").val().length != 14) {
+
+        }
+        else {
+            let ClientId = $("#id").val();
+            let ClientName = $("#ClientName").val();
+            let Phone = $("#Phone").val();
+            let Address = $("#Address").val();
+            var Client = {
+                ClientId: ClientId,
+                ClientName: ClientName,
+                Phone: Phone,
+                Address: Address,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Client/UpdateClient/",
+                data: Client,
+                success: function (res) {
+                    if (res.status_code > 0) {
+                        $('#add').show();
+                        $('#edit').hide();
+                        $('#span').text(" ");
+                        $('#span1').text(" ");
+                        $('#span2').text(" ");
+                        swal("Success!", res.message, "success").then((ok) => {
+                            document.getElementById("form").reset();
+                            $("#Number").val(res.status_code);
+                            $('#tr_' + ClientId).remove();
+                            var rows = "<tr id='tr_" + ClientId + "'>"
+                                + "<td class='text-center'>" + ClientName + "</td>"
+                                + "<td class='text-center'>" + Phone + "</td>"
+                                + "<td class='text-center'>" + ClientId + "</td>"
+                                + "<td class='text-center'>" + Address + "</td>"
+                                + '<td class="text-center" ><a onclick="Edit(' + ClientId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                                + '<td class="text-center" ><a onclick="Delete(' + ClientId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                                + "</tr>";
+                            $('#tblStudent tbody').append(rows);
+                        });
+                        $("#Number").val(res.status_code);
+                    }
+                    else {
+                        swal("Error!", res.message, "error");
+                    }
+                },
+                error: function (res) {
+                    swal("Error!", " Cheack Your Date!", "error");
+                }
+            });
+        }
+
+    };
+
+    function LoadData(pageNumber) {
+        $("#tblStudent tbody tr").remove();
+        $.ajax({
+            type: 'POST',
+            url: '/Client/LoadData?PageNumber=' + pageNumber + '&PageSize=' + 10,
+            dataType: 'json',
+            data: { id: '' },
+            success: function (res) {
+
+                $('.pagination').empty();
+                $('#tblStudent tbody').empty();
+                $.each(res.data, function (i, item) {
+                    $("#Number").val(@ViewBag.Client);
+                    var rows = "<tr id='tr_" + item.clientId + "'>"
+                        + "<td class='text-center'>" + item.clientName + "</td>"
+                        + "<td class='text-center'>" + item.phone + "</td>"
+                        + "<td class='text-center'>" + item.clientId + "</td>"
+                        + "<td class='text-center'>" + item.address + "</td>"
+                        + '<td class="text-center" ><a onclick="Edit(' + item.clientId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                        + '<td class="text-center" ><a onclick="Delete(' + item.clientId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                        + "</tr>";
+                    $('#tblStudent tbody').append(rows);
+                });
+                PaggingTemplate(res.totalPages, res.currentPage);
+            },
+            error: function (ex) {
+                swal("Error!", "Can't load Date!", "error");
+            }
+        });
+        return false;
+    }
+
+    function Delete(id) {
+        swal({
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this imaginary file!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/Client/DeleteClient/' + id,
+                        success: function (res) {
+                            if (res.status_code > 0) {
+                                $("#Number").val(res.status_code);
+                                $("#edit").hide();
+                                $("#add").show();
+                                document.getElementById("form").reset();
+                                $("#Number").val(res.status_code);
+                                $('#span').text(" ");
+                                $('#span1').text(" ");
+                                $('#span2').text(" ");
+                                swal(res.message, {
+                                    icon: "success",
+                                });
+                                $('#tr_' + id).remove();
+                            }
+                            else {
+                                swal("Error!", res.message, "error");
+                            }
+                        },
+                    });
+                } else {
+                    swal("Your imaginary file is safe!", {
+                        icon: "error",
+                    });
+                }
+            });
+    };
+
+    function Edit(id) {
+        $('#span').text(" ");
+        $('#span1').text(" ");
+        $('#span2').text(" ");
+        document.getElementById("form").reset();
+        $.ajax({
+            type: "POST",
+            url: "/Client/EditClient/" + id,
+            success: function (res) {
+                if (res.status_code > 0) {
+                    $("#Number").val(res.status_code);
+                    $('#add').hide();
+                    $('#edit').show();
+                    $.each(res.data, function (i, item) {
+                        $('#id').val(item.clientId);
+                        $('#ClientName').val(item.clientName);
+                        $('#Number').val(item.clientId);
+                        $('#Phone').val(item.phone);
+                        $('#Address').val(item.address);
+
+                    });
+                }
+                else {
+                    swal("Error!", res.message, "error");
+                }
+
+            },
+            error: function (res) {
+                swal("Error!", " Cheack Your Date!", "error");
+            }
+        });
+    };
+
+    function CheckeName() {
+        let ClientId = $("#id").val();
+        let ClientName = $("#ClientName").val();
+        let Phone = $("#Phone").val();
+        let Address = $("#Address").val();
+        var Client = {
+            ClientId: ClientId,
+            ClientName: ClientName,
+            Phone: Phone,
+            Address: Address,
+        };
+        $('#span').text(" ");
+        $.ajax({
+            type: "POST",
+            url: "/Assist/CheckeClientName/",
+            data: Client,
+            success: function (res) {
+                if (res.status_code == 0) {
+                    $('#span').text(" ");
+                }
+                else {
+                    $('#span').text(res.message);
+                }
+            },
+            error: function (res) {
+                swal("Error!", " Cheack Your Date!", "error");
+            }
+        });
+
+    };
+
+    function CheckeAddress() {
+        if ($("#Address").val() == "" || $("#Address").val() == null) {
+            $('#span2').text("Address is Required");
+        }
+        else {
+            $('#span2').text(" ");
+        }
+    };
+
+    function CheckePhone() {
+        if ($("#Phone").val() == "") {
+            $('#span1').text("PHONE is Required");
+        }
+        else {
+            $('#span1').text(" ");
+            validateForm();
+        }
+    };
+
+    function validatePhoneNumber(input_str) {
+        var re = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{8}$/im;
+
+        return re.test(input_str);
+    }
+
+    function validateForm() {
+        var phone = document.getElementById('Phone').value;
+        if (!validatePhoneNumber(phone)) {
+            $('#span1').text("PHONE must be just a 14 digit number");
+        } else {
+            $('#span1').text(" ");
+        }
+        event.preventDefault();
+    }
+
+    function PaggingTemplate(totalPage, currentPage) {
+
+        var template = "";
+        var TotalPages = totalPage;
+        var CurrentPage = currentPage;
+        var PageNumberArray = Array();
+
+
+        var countIncr = 1;
+        if (currentPage != 1) {
+
+            for (var i = currentPage - 1; i <= totalPage; i++) {
+
+                PageNumberArray[0] = currentPage - 1;
+                if (PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = i + 1;
+                }
+                countIncr++;
+            };
+        }
+        else {
+            for (var i = currentPage; i <= totalPage; i++) {
+
+                PageNumberArray[0] = currentPage;
+                if (totalPage != currentPage && PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = i + 1;
+                }
+                countIncr++;
+            };
+        }
+        PageNumberArray = PageNumberArray.slice(0, 5);
+        var FirstPage = 1;
+        var LastPage = totalPage;
+        if (totalPage != currentPage) {
+            var ForwardOne = currentPage + 1;
+        }
+        var BackwardOne = 1;
+        if (currentPage > 1) {
+            BackwardOne = currentPage - 1;
+        }
+
+        template = template + '<li class="page-item page-indicator">' +
+            '<a onclick="LoadData(' + BackwardOne + ')" class="page-link" href = "javascript:void()" >' +
+            '<i class="la la-angle-left"></i></a ></li >';
+
+
+
+        var numberingLoop = "";
+        for (var i = 0; i < PageNumberArray.length; i++) {
+            if (PageNumberArray[i] == currentPage) {
+
+                numberingLoop = numberingLoop + ' <li class="page-item active"><a onclick="LoadData(' + PageNumberArray[i] + ')" class="page-link" href="javascript:void()">' + PageNumberArray[i] + '</a></li>'
+
+            }
+            else {
+                numberingLoop = numberingLoop + ' <li class="page-item "><a onclick="LoadData(' + PageNumberArray[i] + ')" class="page-link" href="javascript:void()">' + PageNumberArray[i] + '</a></li>'
+            }
+
+        }
+        template = template + numberingLoop + '<li class="page-item page-indicator">' +
+            '<a onclick="LoadData(' + ForwardOne + ')" class="page-link" href = "javascript:void()" >' +
+            '<i class="la la-angle-right"></i></a ></li >';
+
+        $(".pagination").append(template);
+
+
+    }
+</script>
+

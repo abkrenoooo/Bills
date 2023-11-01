@@ -1,0 +1,389 @@
+﻿@model DAL.ViewModel.Company_VM
+@{
+    ViewData["Title"] = "AddCompany";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <div class="container-fluid">
+
+        <section id="horizontal-form-layouts">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-wrap bar-success">
+                                <h4 class="card-title" id="horz-layout-basic">Company Data Form</h4>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="px-3">
+                                <form id="form" class="form form-horizontal" asp-action="AddCompany" asp-controller="Company">
+
+
+                                    <input type="number" hidden id="id" class="form-control" asp-for="CompanyId">
+
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="CompanyName">Company Name : </label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="CompanyName" onblur="CheckeName()" class="form-control" asp-for="CompanyName" required placeholder="Enter Name">
+                                            <span id="span" asp-validation-for="CompanyName" class="text-danger"></span>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="col-md-3 label-control" for="Note">Notes: </label>
+                                        <div class="col-md-9">
+                                            <textarea id="Note" rows="5" class="form-control" asp-for="Note" placeholder="Enter Note..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" id="Cancel" class="btn btn-danger mr-1">
+                                            <i class="icon-trash"></i> Cancel
+                                        </button>
+                                        <button type="button" id="add" class="btn btn-success" onclick="Create()">
+                                            <i class="icon-note"></i> Save
+                                        </button>
+                                        <button type="button" style="display:none" id="edit" class="btn btn-success" onclick="Update()">
+                                            <i class="icon-note"></i> Edit
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <table id="tblStudent" class="table table-striped table-bordered zero-configuration mt-40">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">Name</th>
+                                        <th class="text-center">Note </th>
+                                        <th class="text-center">Eite</th>
+                                        <th class="text-center">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+
+                            </table>
+                            <nav >
+                                <ul class="pagination justify-content-center">
+                                </ul>
+                            </nav>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+<script src="~/jquery/jquery.min.js"></script>
+<script src="~/jquery-validate/jquery.validate.js"></script>
+<script src="~/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js"></script>
+
+@section Scripts  {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
+<script>
+    $(document).ready(function () {
+        LoadData(1);
+    });
+
+    function Create() {
+
+        event.preventDefault();
+        if ($("#CompanyName").val() == "" || $("#CompanyName").val() == null) {
+            CheckeName();
+        }
+        else {
+            let CompanyId = $("#id").val();
+            let CompanyName = $("#CompanyName").val();
+            let Note = $("#Note").val();
+            var Company = {
+                CompanyName: CompanyName,
+                Note: Note,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Company/AddCompany/",
+                data: Company,
+                success: function (res) {
+                    if (res.status_code == 0) {
+                        swal("Success!", res.message, "success").then((ok) => {
+                            document.getElementById("form").reset();
+                            $.each(res.data, function (i, item) {
+                                var rows = "<tr id='tr_" + item.companyId + "'>"
+                                    + "<td class='text-center'>" + CompanyName + "</td>"
+                                    + "<td class='text-center'>" + Note + "</td>"
+                                    + '<td class="text-center" ><a onclick="Edit(' + item.companyId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                                    + '<td class="text-center" ><a onclick="Delete(' + item.companyId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                                    + "</tr>";
+                                $('#tblStudent tbody').append(rows);
+                            });
+                        });
+                    }
+                    else {
+                        swal("Error!", res.message, "error");
+                    }
+                },
+                error: function (res) {
+                    swal("Error!", " Cheack Your Date!", "error");
+                }
+
+            });
+        }
+
+    };
+
+    function Update() {
+
+        event.preventDefault();
+        if ($("#CompanyName").val() == "" || $("#CompanyName").val() == null) {
+            CheckeName();
+        }
+        else {
+            let CompanyId = $("#id").val();
+            let CompanyName = $("#CompanyName").val();
+            let Note = $("#Note").val();
+            var Company = {
+                CompanyId: CompanyId,
+                CompanyName: CompanyName,
+                Note: Note,
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Company/UpdateCompany/",
+                data: Company,
+                success: function (res) {
+                    if (res.status_code == 0) {
+                        $('#add').show();
+                        $('#edit').hide();
+                        swal("Success!", res.message, "success").then((ok) => {
+                            document.getElementById("form").reset();
+                            $('#tr_' + CompanyId).remove();
+                            var rows = "<tr id='tr_" + CompanyId + "'>"
+                                + "<td class='text-center'>" + CompanyName + "</td>"
+                                + "<td class='text-center'>" + Note + "</td>"
+                                + '<td class="text-center" ><a onclick="Edit(' + CompanyId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                                + '<td class="text-center" ><a onclick="Delete(' + CompanyId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                                + "</tr>";
+                            $('#tblStudent tbody').append(rows);
+                        });
+                    }
+                    else {
+                        swal("Error!", res.message, "error");
+                    }
+                },
+                error: function (res) {
+                    swal("Error!", " Cheack Your Date!", "error");
+                }
+            });
+        }
+
+    };
+
+    function LoadData(pageNumber) {
+        $("#tblStudent tbody tr").remove();
+        $.ajax({
+            type: 'POST',
+            url: '/Company/LoadData?PageNumber=' + pageNumber + '&PageSize=' + 10,
+            dataType: 'json',
+            data: { id: '' },
+            success: function (res) {
+                $('.pagination').empty();
+                $('#tblStudent tbody').empty();
+                $.each(res.data, function (i, item) {
+                    var rows = "<tr id='tr_" + item.companyId + "'>"
+                        + "<td class='text-center'>" + item.companyName + "</td>"
+                        + "<td class='text-center'>" + item.note + "</td>"
+                        + '<td class="text-center" ><a onclick="Edit(' + item.companyId + ')"  class="btn btn-success mb-2">Edit</a></td >'
+                        + '<td class="text-center" ><a onclick="Delete(' + item.companyId + ')" class="btn btn-danger mb-2" >Delete</a></td >'
+                        + "</tr>";
+                    $('#tblStudent tbody').append(rows);
+                });
+                PaggingTemplate(res.totalPages, res.currentPage);
+            },
+            error: function (ex) {
+                swal("Error!", "Can't load Date!", "error");
+            }
+        });
+        return false;
+    }
+ 
+
+    function Delete(id) {
+        $('#span').text(" ");
+        swal({
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this imaginary file!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/Company/DeleteCompany/' + id,
+                        success: function (res) {
+                            if (res.status_code == 0) {
+                                $("#edit").hide();
+                                $("#add").show();
+                                document.getElementById("form").reset();
+                                $('#span').text(" ");
+                                swal(res.message, {
+                                    icon: "success",
+                                });
+                                $('#tr_' + id).remove();
+                            }
+                            else {
+                                swal("Error!", res.message, "error");
+                            }
+                        }
+                    });
+                }
+                else {
+                    swal("Your imaginary file is safe!", {
+                        icon: "error",
+                    });
+                }
+            });
+    };
+
+    function Edit(id) {
+        $('#span').text(" ");
+        document.getElementById("form").reset();
+        $.ajax({
+            type: "POST",
+            url: "/Company/EditCompany/" + id,
+            success: function (res) {
+                if (res.status_code == 0) {
+                    $('#add').hide();
+                    $('#edit').show();
+                    $.each(res.data, function (i, item) {
+                        $('#id').val(item.companyId);
+                        $('#CompanyName').val(item.companyName);
+                        $('#Note').val(item.note);
+
+                    });
+                }
+                else {
+                    swal("Error!", res.message, "error");
+                }
+
+            },
+            error: function (res) {
+                swal("Error!", " Cheack Your Date!", "error");
+            }
+        });
+    };
+
+    function CheckeName() {
+        let CompanyId = $("#id").val();
+        let CompanyName = $("#CompanyName").val();
+        let Note = $("#Note").val();
+        var Company = {
+            CompanyId: CompanyId,
+            CompanyName: CompanyName,
+            Note: Note,
+        };
+        $('#span').text(" ");
+        $.ajax({
+            type: "POST",
+            url: "/Assist/CheckeCompanyName/",
+            data: Company,
+            success: function (res) {
+                if (res.status_code == 0) {
+                    $('#span').text(" ");
+
+                }
+                else {
+                    $('#span').text(res.message);
+                }
+            },
+            error: function (res) {
+                swal("Error!", " Cheack Your Date!", "error");
+            }
+        });
+
+    };
+
+    function PaggingTemplate(totalPage, currentPage) {
+
+        var template = "";
+        var TotalPages = totalPage;
+        var CurrentPage = currentPage;
+        var PageNumberArray = Array();
+
+
+        var countIncr = 1;
+        if (currentPage != 1) {
+
+            for (var i = currentPage - 1; i <= totalPage; i++) {
+
+                PageNumberArray[0] = currentPage - 1;
+                if (PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = i + 1;
+                }
+                countIncr++;
+            };
+        }
+        else {
+            for (var i = currentPage; i <= totalPage; i++) {
+
+                PageNumberArray[0] = currentPage;
+                if (totalPage != currentPage && PageNumberArray[countIncr - 1] != totalPage) {
+                    PageNumberArray[countIncr] = i + 1;
+                }
+                countIncr++;
+            };
+        }
+        PageNumberArray = PageNumberArray.slice(0, 5);
+        var FirstPage = 1;
+        var LastPage = totalPage;
+        if (totalPage != currentPage) {
+            var ForwardOne = currentPage + 1;
+        }
+        var BackwardOne = 1;
+        if (currentPage > 1) {
+            BackwardOne = currentPage - 1;
+        }
+
+        template = template + '<li class="page-item page-indicator">' +
+            '<a onclick="LoadData(' + BackwardOne + ')" class="page-link" href = "javascript:void()" >' +
+            '<i class="la la-angle-left"></i></a ></li >';
+
+
+
+        var numberingLoop = "";
+        for (var i = 0; i < PageNumberArray.length; i++) {
+            if (PageNumberArray[i] == currentPage) {
+
+                numberingLoop = numberingLoop + ' <li class="page-item active"><a onclick="LoadData(' + PageNumberArray[i] + ')" class="page-link" href="javascript:void()">' + PageNumberArray[i] + '</a></li>'
+
+            }
+            else {
+                numberingLoop = numberingLoop + ' <li class="page-item "><a onclick="LoadData(' + PageNumberArray[i] + ')" class="page-link" href="javascript:void()">' + PageNumberArray[i] + '</a></li>'
+            }
+
+        }
+        template = template + numberingLoop + '<li class="page-item page-indicator">' +
+            '<a onclick="LoadData(' + ForwardOne + ')" class="page-link" href = "javascript:void()" >' +
+            '<i class="la la-angle-right"></i></a ></li >';
+
+        $(".pagination").append(template);
+
+
+    }
+
+    $("#Cancel").click(function () {
+        $("#edit").hide();
+        $("#add").show();
+        document.getElementById("form").reset();
+        $('#span').text(" ");
+    })
+</script>
